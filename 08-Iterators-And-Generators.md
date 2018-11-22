@@ -1,12 +1,12 @@
-# Iterators and Generators
+# イテレータとジェネレータ
 
-Many programming languages have shifted from iterating over data with `for` loops, which require initializing variables to track position in a collection, to using iterator objects that programmatically return the next item in a collection. Iterators make working with collections of data easier, and ECMAScript 6 adds iterators to JavaScript. When coupled with new array methods and new types of collections (such as sets and maps), iterators are key for efficient data processing, and you will find them in many parts of the language. There's a new `for-of` loop that works with iterators, the spread (`...`) operator uses iterators, and iterators even make asynchronous programming easier.
+多くのプログラミング言語は、コレクション内の位置を追跡するための変数の初期化を必要とする`for`ループによるデータの反復処理から、コレクション内の次の項目をプログラムで返す反復子オブジェクトへの移行に移行しました。 イテレータはデータの集まりを扱うのを容易にし、ECMAScript6はイテレータをJavaScriptに追加します。 新しい配列メソッドや新しいタイプのコレクション(セットやマップなど)と組み合わせると、イテレーターは効率的なデータ処理の鍵となり、言語の多くの部分でそれらを見つけることができます。 イテレータと連動する新しい`for-of`ループがあり、スプレッド(`...`)演算子はイテレータを使用し、イテレータは非同期プログラミングを容易にします。
 
-This chapter covers the many uses of iterators, but first, it's important to understand the history behind why iterators were added to JavaScript.
+この章では、イテレータの多くの用途について説明しますが、まずイテレータがJavaScriptに追加された理由を理解することが重要です。
 
-## The Loop Problem
+## ループ問題
 
-If you've ever programmed in JavaScript, you've probably written code that looks like this:
+JavaScriptでプログラミングしたことがある人は、おそらく次のようなコードを書いているはずです。
 
 ```js
 var colors = ["red", "green", "blue"];
@@ -16,17 +16,17 @@ for (var i = 0, len = colors.length; i < len; i++) {
 }
 ```
 
-This standard `for` loop tracks the index into the `colors` array with the `i` variable. The value of `i` increments each time the loop executes if `i` isn't larger than the length of the array (stored in `len`).
+この標準の`for`ループは`i`変数を使ってインデックスを`colors`配列にトラッキングします。`i`の値は`i`が配列​​の長さ(`len`に格納されている)よりも大きくなければ、ループが実行されるたびにインクリメントされます。
 
-While this loop is fairly straightforward, loops grow in complexity when you nest them and need to keep track of multiple variables. Additional complexity can lead to errors, and the boilerplate nature of the `for` loop lends itself to more errors as similar code is written in multiple places. Iterators are meant to solve that problem.
+このループはかなり簡単ですが、ループをネストすると複雑になり、複数の変数を追跡する必要があります。追加の複雑さはエラーにつながる可能性があり、`for`ループの定型的な性質は、同様のコードが複数の場所で書かれているので、より多くのエラーに役立ちます。イテレータはその問題を解決するためのものです。
 
-## What are Iterators?
+## イテレータとは何ですか？
 
-Iterators are just objects with a specific interface designed for iteration. All iterator objects have a `next()` method that returns a result object. The result object has two properties: `value`, which is the next value, and `done`, which is a boolean that's `true` when there are no more values to return. The iterator keeps an internal pointer to a location within a collection of values and with each call to the `next()` method, it returns the next appropriate value.
+反復子は、反復のために設計された特定のインターフェースを持つオブジェクトに過ぎません。すべての反復子オブジェクトには結果オブジェクトを返す`next()`メソッドがあります。結果オブジェクトには、次の値である`value`と返される値がなくなると真となる`true`という2つのプロパティがあります。イテレータは、値のコレクション内の場所への内部ポインタを保持し、`next()`メソッドを呼び出すたびに、次の適切な値を返します。
 
-If you call `next()` after the last value has been returned, the method returns `done` as `true` and `value` contains the *return value* for the iterator. That return value is not part of the data set, but rather a final piece of related data, or `undefined` if no such data exists. An iterator's return value is similar to a function's return value in that it's a final way to pass information to the caller.
+最後の値が返された後に`next()`を呼び出すと、メソッドは`done`を`true`として返し、`value`はイテレータの戻り値*を返します。その戻り値はデータセットの一部ではなく、関連するデータの最後の部分です。そうしたデータが存在しない場合は`undefined`です。イテレータの戻り値は、呼び出し元に情報を渡す最後の方法であるという点で、関数の戻り値に似ています。
 
-With that in mind, creating an iterator using ECMAScript 5 is fairly straightforward:
+これを念頭において、ECMAScript5を使用したイテレータの作成はかなり簡単です。
 
 ```js
 function createIterator(items) {
@@ -59,15 +59,15 @@ console.log(iterator.next());           // "{ value: undefined, done: true }"
 console.log(iterator.next());           // "{ value: undefined, done: true }"
 ```
 
-The `createIterator()` function returns an object with a `next()` method. Each time the method is called, the next value in the `items` array is returned as `value`. When `i` is 3, `done` becomes `true` and the ternary conditional operator that sets `value` evaluates to `undefined`. These two results fulfill the special last case for iterators in ECMAScript 6, where `next()` is called on an iterator after the last piece of data has been used.
+`createIterator()`関数は`next()`メソッドを持つオブジェクトを返します。メソッドが呼び出されるたびに、`items`配列の次の値が`value`として返されます。`i`が3のとき、`done`は`true`になり、`value`を設定する三項条件演算子は`undefined`と評価されます。これらの2つの結果は、最後のデータが使用された後にイテレータでnext()が呼び出されるECMAScript6のイテレータの特別な最後のケースを満たします。
 
-As this example shows, writing iterators that behave according to the rules laid out in ECMAScript 6 is a bit complex.
+この例が示すように、ECMAScript6で定義された規則に従って動作するイテレータを作成するのは少し複雑です。
 
-Fortunately, ECMAScript 6 also provides generators, which make creating iterator objects much simpler.
+幸いにも、ECMAScript6はジェネレータも提供しています。これにより、イテレータオブジェクトの作成がはるかに簡単になります。
 
-## What Are Generators?
+## 発電機とは何ですか？
 
-A *generator* is a function that returns an iterator. Generator functions are indicated by a star character (`*`) after the `function` keyword and use the new `yield` keyword. It doesn't matter if the star is directly next to `function` or if there's some whitespace between it and the `*` character, as in this example:
+A *ジェネレータ*はイテレータを返す関数です。ジェネレータ機能は、`function`キーワードの後に​​スター文字(`*`)で示され、新しい`yield`キーワードを使用します。`star`が`function`のすぐ隣にあるのか、`star`と`*`文字の間に空白があるかどうかは関係ありません。
 
 ```js
 // generator
@@ -85,11 +85,11 @@ console.log(iterator.next().value);     // 2
 console.log(iterator.next().value);     // 3
 ```
 
-The `*` before `createIterator()` makes this function a generator. The `yield` keyword, also new to ECMAScript 6, specifies values the resulting iterator should return when `next()` is called, in the order they should be returned. The iterator generated in this example has three different values to return on successive calls to the `next()` method: first `1`, then `2`, and finally `3`. A generator gets called like any other function, as shown when `iterator` is created.
+`createIterator()`の前の`*`は、この関数をジェネレータにします。`yield`キーワードは、ECMAScript6の新バージョンでも、`next()`が呼び出されたときに返される値を、返される順序で指定します。この例で生成されるイテレータは、`next()`メソッドへの連続した呼び出しで返される3つの異なる値を持っています：最初は`1`、その後は`2`、最後は`3`です。ジェネレータは、`iterator`が作成されたときに示されるように、他の関数と同様に呼び出されます。
 
-Perhaps the most interesting aspect of generator functions is that they stop execution after each `yield` statement. For instance, after `yield 1` executes in this code, the function doesn't execute anything else until the iterator's `next()` method is called. At that point, `yield 2` executes. This ability to stop execution in the middle of a function is extremely powerful and leads to some interesting uses of generator functions (discussed in the "Advanced Iterator Functionality" section).
+おそらく、ジェネレータ関数の最も興味深い点は、各`yield`ステートメントの後に実行を停止することです。例えば、このコードで`yield 1`を実行した後、イテレータの`next()`メソッドが呼び出されるまで関数は何も実行しません。その時点で、`yield 2`が実行されます。関数の途中で実行を停止するこの機能は非常に強力で、ジェネレータ関数の興味深い使い方につながります(「高度なイテレータの機能」のセクションで説明します)。
 
-The `yield` keyword can be used with any value or expression, so you can write generator functions that add items to iterators without just listing the items one by one. For example, here's one way you could use `yield` inside a `for` loop:
+`yield`キーワードは任意の値や式で使うことができるので、項目を1つずつリストするだけでイテレータに項目を追加するジェネレータ関数を書くことができます。例えば、`for`ループの中で`yield`を使う方法の一つがあります：
 
 ```js
 function *createIterator(items) {
@@ -109,13 +109,13 @@ console.log(iterator.next());           // "{ value: undefined, done: true }"
 console.log(iterator.next());           // "{ value: undefined, done: true }"
 ```
 
-This example passes an array called `items` to the `createIterator()` generator function. Inside the function, a `for` loop yields the elements from the array into the iterator as the loop progresses. Each time `yield` is encountered, the loop stops, and each time `next()` is called on `iterator`, the loop picks up with the next `yield` statement.
+この例では`items`という配列を`createIterator()`ジェネレータ関数に渡します。 関数の中で、`for`ループは、ループが進むにつれて配列からイテレータに要素を返します。`yield`が出現するたびにループが止まり、`next()`が`iterator`で呼び出されるたびに、ループは次の`yield`ステートメントでピックアップします。
 
-Generator functions are an important feature of ECMAScript 6, and since they are just functions, they can be used in all the same places. The rest of this section focuses on other useful ways to write generators.
+Generator関数はECMAScript6の重要な機能であり、関数なので同じ場所でも使用できます。 このセクションの残りの部分では、ジェネレータを書くための他の便利な方法に焦点を当てています。
 
-W> The `yield` keyword can only be used inside of generators. Use of `yield` anywhere else is a syntax error, including functions that are inside of generators, such as:
+W>`yield`キーワードは、ジェネレータの内部でのみ使用できます。 他の場所で`yield`を使用すると、以下のようなジェネレータの内部にある関数を含む構文エラーです：
 W>
-W> ```js
+W>```js
 W> function *createIterator(items) {
 W>
 W>     items.forEach(function(item) {
@@ -124,13 +124,13 @@ W>         // syntax error
 W>         yield item + 1;
 W>     });
 W> }
-W> ```
+W>```
 W>
-W> Even though `yield` is technically inside of `createIterator()`, this code is a syntax error because `yield` cannot cross function boundaries. In this way, `yield` is similar to `return`, in that a nested function cannot return a value for its containing function.
+W>`yield`は技術的に`createIterator()`の内部にありますが、`yield`は関数の境界を越えることができないので、このコードは構文エラーです。 このように、`yield`は`return`と似ています。入れ子関数はその関数を含む値を返すことができません。
 
-### Generator Function Expressions
+### ジェネレータ関数の式
 
-You can use function expressions to create generators by just including a star (`*`) character between the `function` keyword and the opening parenthesis. For example:
+`function`キーワードと開始括弧の間にスター(`*`)文字を入れるだけで、関数式を使ってジェネレータを作成することができます。 例えば：
 
 ```js
 let createIterator = function *(items) {
@@ -150,13 +150,13 @@ console.log(iterator.next());           // "{ value: undefined, done: true }"
 console.log(iterator.next());           // "{ value: undefined, done: true }"
 ```
 
-In this code, `createIterator()` is a generator function expression instead of a function declaration. The asterisk goes between the `function` keyword and the opening parentheses because the function expression is anonymous. Otherwise, this example is the same as the previous version of the `createIterator()` function, which also used a `for` loop.
+このコードでは、`createIterator()`は関数宣言の代わりにジェネレータ関数式です。 アスタリスクは、関数式が匿名であるため、`function`キーワードと開始括弧の間に入ります。 さもなければ、この例は`for`ループを使った`createIterator()`関数の前のバージョンと同じです。
 
-I> Creating an arrow function that is also a generator is not possible.
+>ジェネレータである矢印関数を作成することはできません。
 
-### Generator Object Methods
+### ジェネレータオブジェクトメソッド
 
-Because generators are just functions, they can be added to objects, too. For example, you can make a generator in an ECMAScript 5-style object literal with a function expression:
+ジェネレータは単なる関数なので、オブジェクトにもジェネレータを追加することができます。 たとえば、ファンクション式を使用してECMAScript5スタイルのオブジェクトリテラルでジェネレータを作成できます。
 
 ```js
 var o = {
@@ -171,7 +171,7 @@ var o = {
 let iterator = o.createIterator([1, 2, 3]);
 ```
 
-You can also use the ECMAScript 6 method shorthand by prepending the method name with a star (`*`):
+ECMAScript6メソッドの省略形は、メソッド名の前にスター(`*`)を付けて使うこともできます：
 
 ```js
 var o = {
@@ -186,17 +186,17 @@ var o = {
 let iterator = o.createIterator([1, 2, 3]);
 ```
 
-These examples are functionally equivalent to the example in the "Generator Function Expressions" section; they just use different syntax. In the shorthand version, because the `createIterator()` method is defined with no `function` keyword, the star is placed immediately before the method name, though you can leave whitespace between the star and the method name.
+これらの例は、機能的には「ジェネレータ関数式」の例の例と同等です。彼らは異なる構文を使用します。省略形では、`createIterator()`メソッドは`function`キーワードなしで定義されているので、スターとメソッド名の間に空白を残すことはできますが、スターはメソッド名の直前に置かれます。
 
-## Iterables and for-of
+## Iterablesとfor-of
 
-Closely related to iterators, an *iterable* is an object with a `Symbol.iterator` property. The well-known `Symbol.iterator` symbol specifies a function that returns an iterator for the given object. All collection objects (arrays, sets, and maps) and strings are iterables in ECMAScript 6 and so they have a default iterator specified. Iterables are designed to be used with a new addition to ECMAScript: the `for-of` loop.
+イテレータと密接に関連している* iterable *は、`Symbol.iterator`プロパティを持つオブジェクトです。良く知られている`Symbol.iterator`シンボルは、与えられたオブジェクトのイテレータを返す関数を指定します。 ECMAScript6では、すべてのコレクションオブジェクト(配列、セット、マップ)と文字列がiterableであるため、デフォルトイテレーターが指定されています。イテラブルは、ECMAScriptに新たに追加されたfor-ofループを使用するように設計されています。
 
-I> All iterators created by generators are also iterables, as generators assign the `Symbol.iterator` property by default.
+I>ジェネレータによって生成されるすべてのイテレータは、デフォルトで`Symbol.iterator`プロパティをジェネレータが割り当てるので、イテラブルです。
 
-At the beginning of this chapter, I mentioned the problem of tracking an index inside a `for` loop. Iterators are the first part of the solution to that problem. The `for-of` loop is the second part: it removes the need to track an index into a collection entirely, leaving you free to focus on working with the contents of the collection.
+この章の初めに、私は`for`ループの中でインデックスを追跡する問題について述べました。イテレータは、この問題の解決策の最初の部分です。`for-of`ループは第2の部分です：コレクションの中身を完全に追跡する必要がなくなり、コレクションの内容を自由に扱うことができます。
 
-A `for-of` loop calls `next()` on an iterable each time the loop executes and stores the `value` from the result object in a variable. The loop continues this process until the returned object's `done` property is `true`. Here's an example:
+`for-of`ループは、ループが実行され、結果オブジェクトからの`value`を変数に格納するたびに、iterable上で`next()`を呼び出します。ループは、返されたオブジェクトの`done`プロパティが`true`になるまでこのプロセスを継続します。ここに例があります：
 
 ```js
 let values = [1, 2, 3];
@@ -206,7 +206,7 @@ for (let num of values) {
 }
 ```
 
-This code outputs the following:
+このコードは次を出力します：
 
 ```
 1
@@ -214,15 +214,15 @@ This code outputs the following:
 3
 ```
 
-This `for-of` loop first calls the `Symbol.iterator` method on the `values` array to retrieve an iterator. (The call to `Symbol.iterator` happens behind the scenes in the JavaScript engine itself.) Then `iterator.next()` is called, and the `value` property on the iterator's result object is read into `num`. The `num` variable is first 1, then 2, and finally 3. When `done` on the result object is `true`, the loop exits, so `num` is never assigned the value of `undefined`.
+この`for-of`ループは`values`配列の`Symbol.iterator`メソッドを最初に呼び出してイテレータを取得します。 (`Symbol.iterator`への呼び出しは、JavaScriptエンジン自体の中で起こります。)`iterator.next()`が呼び出され、イテレータの結果オブジェクトの`value`プロパティが`num`に読み込まれます。`num`変数は、最初は1、次に2、そして最後に3です。結果オブジェクトで`done`が`true`のとき、ループは終了します.`num`は決して`undefined`の値に割り当てられません。
 
-If you are simply iterating over values in an array or collection, then it's a good idea to use a `for-of` loop instead of a `for` loop. The `for-of` loop is generally less error-prone because there are fewer conditions to keep track of. Save the traditional `for` loop for more complex control conditions.
+単純に配列やコレクションの値を反復処理するのであれば、`for`ループの代わりに`for-of`ループを使うことをお勧めします。`for-of`ループは、追跡する条件が少なくて済むため、一般的にエラーが起こりにくいです。より複雑な制御条件のために伝統的な`for`ループを保存します。
 
-W> The `for-of` statement will throw an error when used on, a non-iterable object, `null`, or `undefined`.
+W>`for-of`ステートメントは、on、iterable以外のオブジェクト、`null`、`undefined`を使用するとエラーをスローします。
 
-### Accessing the Default Iterator
+### デフォルトイテレータへのアクセス
 
-You can use `Symbol.iterator` to access the default iterator for an object, like this:
+`Symbol.iterator`を使ってオブジェクトのデフォルトイテレータにアクセスすることができます：
 
 ```js
 let values = [1, 2, 3];
@@ -234,9 +234,9 @@ console.log(iterator.next());           // "{ value: 3, done: false }"
 console.log(iterator.next());           // "{ value: undefined, done: true }"
 ```
 
-This code gets the default iterator for `values` and uses that to iterate over the items in the array. This is the same process that happens behind-the-scenes when using a `for-of` loop.
+このコードは、`values`のデフォルトイテレータを取得し、それを使って配列内の項目を反復処理します。 これは`for-of`ループを使用したときの背後で起こる同じプロセスです。
 
-Since `Symbol.iterator` specifies the default iterator, you can use it to detect whether an object is iterable as follows:
+`Symbol.iterator`はデフォルトのイテレータを指定するので、それを使ってオブジェクトが次のように反復可能かどうかを検出することができます：
 
 ```js
 function isIterable(object) {
@@ -251,13 +251,13 @@ console.log(isIterable(new WeakMap())); // false
 console.log(isIterable(new WeakSet())); // false
 ```
 
-The `isIterable()` function simply checks to see if a default iterator exists on the object and is a function. The `for-of` loop does a similar check before executing.
+`isIterable()`関数は、単にオブジェクトにデフォルトのイテレータが存在するかどうかを調べ、関数であるかどうかを調べます。`for-of`ループは実行前に同様のチェックを行います。
 
-So far, the examples in this section have shown ways to use `Symbol.iterator` with built-in iterable types, but you can also use the `Symbol.iterator` property to create your own iterables.
+ここまでの例では、組み込みのiterable型を持つ`Symbol.iterator`を使用する方法を示しましたが、`Symbol.iterator`プロパティを使用して独自のiterableを作成することもできます。
 
-### Creating Iterables
+### イテラブルを作成する
 
-Developer-defined objects are not iterable by default, but you can make them iterable by creating a `Symbol.iterator` property containing a generator. For example:
+開発者定義のオブジェクトは、デフォルトでは反復可能ではありませんが、ジェネレータを含む`Symbol.iterator`プロパティを作成することで反復可能にすることができます。 例えば：
 
 ```js
 let collection = {
@@ -279,7 +279,7 @@ for (let x of collection) {
 }
 ```
 
-This code outputs the following:
+このコードは次を出力します：
 
 ```
 1
@@ -287,38 +287,38 @@ This code outputs the following:
 3
 ```
 
-First, the example defines a default iterator for an object called `collection`. The default iterator is created by the `Symbol.iterator` method, which is a generator (note the star still comes before the name). The generator then uses a `for-of` loop to iterate over the values in `this.items` and uses `yield` to return each one. Instead of manually iterating to define values for the default iterator of `collection` to return, the `collection` object relies on the default iterator of `this.items` to do the work.
+まず、この例は、`collection`と呼ばれるオブジェクトのデフォルトイテレータを定義します。デフォルトのイテレータは`Symbol.iterator`メソッドによって生成されます。このメソッドはジェネレータです(名前の前にはまだ星があります)。その後、ジェネレータは`for-of`ループを使用して`this.items`の値を反復処理し、`yield`を使用してそれぞれを返します。`collection`オブジェクトは、手動で反復して`collection`のデフォルトイテレータの値を定義する代わりに、`this.items`のデフォルトイテレータに依存して作業を行います。
 
-I> "Delegating Generators" later in this chapter describes a different approach to using the iterator of another object.
+I>この章の「ジェネレータの委譲」では、別のオブジェクトのイテレータを使用する別の方法について説明します。
 
-Now you've seen some uses for the default array iterator, but there are many more iterators built in to ECMAScript 6 to make working with collections of data easy.
+今では、デフォルトの配列イテレータの用途をいくつか見てきましたが、ECMAScript6にはより多くのイテレータが組み込まれており、データのコレクションを扱いやすくしています。
 
-## Built-in Iterators
+## 組み込みイテレータ
 
-Iterators are an important part of ECMAScript 6, and as such, you don't need to create your own iterators for many built-in types; the language includes them by default. You only need to create iterators when the built-in iterators don't serve your purpose, which will most frequently be when defining your own objects or classes. Otherwise, you can rely on built-in iterators to do your work. Perhaps the most common iterators to use are those that work on collections.
+イテレータはECMAScript6の重要な部分であり、多くのビルトイン型に対して独自のイテレータを作成する必要はありません。言語にはデフォルトでそれらが含まれています。ビルトインのイテレータが目的を果たさないときは、イテレータを作成する必要があります。これは、独自のオブジェクトまたはクラスを定義するときに最も頻繁に発生します。それ以外の場合、ビルトインイテレーターを使用して作業を行うことができます。使用する最も一般的なイテレータは、おそらくコレクションで動作するイテレータです。
 
-### Collection Iterators
+コレクションイテレータ
 
-ECMAScript 6 has three types of collection objects: arrays, maps, and sets. All three have the following built-in iterators to help you navigate their content:
+ECMAScript6には、配列、マップ、セットという3種類のコレクションオブジェクトがあります。これらの3つには、コンテンツのナビゲートに役立つ組み込みのイテレータが組み込まれています。
 
-* `entries()` - Returns an iterator whose values are a key-value pair
-* `values()` - Returns an iterator whose values are the values of the collection
-* `keys()` - Returns an iterator whose values are the keys contained in the collection
+*`entries()`- 値がキーと値のペアであるイテレータを返します
+* values()`- 値がコレクションの値であるイテレータを返します。
+* keys()`- コレクションに含まれるキーの値を持つイテレータを返します。
 
-You can retrieve an iterator for a collection by calling one of these methods.
+これらのメソッドの1つを呼び出すことによって、コレクションのイテレータを取得できます。
 
-#### The entries() Iterator
+#### entries()Iterator
 
-The `entries()` iterator returns a two-item array each time `next()` is called. The two-item array represents the key and value for each item in the collection. For arrays, the first item is the numeric index; for sets, the first item is also the value (since values double as keys in sets); for maps, the first item is the key.
+`entries()`イテレータは`next()`が呼び出されるたびに2項目の配列を返します。 2項目配列は、コレクション内の各項目のキーと値を表します。配列の場合、最初の項目は数値インデックスです。セットの場合、最初のアイテムも値です(値はセット内のキーの2倍です)。マップの場合、最初の項目はキーです。
 
-Here are some examples that use this iterator:
+このイテレータを使用するいくつかの例を以下に示します。
 
 ```js
 let colors = [ "red", "green", "blue" ];
 let tracking = new Set([1234, 5678, 9012]);
 let data = new Map();
 
-data.set("title", "Understanding ECMAScript 6");
+data.set("title", "Understanding ECMAScript6");
 data.set("format", "ebook");
 
 for (let entry of colors.entries()) {
@@ -334,7 +334,7 @@ for (let entry of data.entries()) {
 }
 ```
 
-The `console.log()` calls give the following output:
+`console.log()`呼び出しは次の出力を与えます：
 
 ```
 [0, "red"]
@@ -343,22 +343,22 @@ The `console.log()` calls give the following output:
 [1234, 1234]
 [5678, 5678]
 [9012, 9012]
-["title", "Understanding ECMAScript 6"]
+["title", "Understanding ECMAScript6"]
 ["format", "ebook"]
 ```
 
-This code uses the `entries()` method on each type of collection to retrieve an iterator, and it uses `for-of` loops to iterate the items. The console output shows how the keys and values are returned in pairs for each object.
+このコードは、イテレータを取得するためにコレクションの各タイプで`entries()`メソッドを使用し、`for-of`ループを使用してアイテムを反復します。 コンソール出力は、オブジェクトごとにキーと値がどのようにペアで返されるかを示します。
 
-#### The values() Iterator
+#### values()Iterator
 
-The `values()` iterator simply returns values as they are stored in the collection. For example:
+`values()`イテレータは単にコレクションに格納されている値を返します。 例えば：
 
 ```js
 let colors = [ "red", "green", "blue" ];
 let tracking = new Set([1234, 5678, 9012]);
 let data = new Map();
 
-data.set("title", "Understanding ECMAScript 6");
+data.set("title", "Understanding ECMAScript6");
 data.set("format", "ebook");
 
 for (let value of colors.values()) {
@@ -374,7 +374,7 @@ for (let value of data.values()) {
 }
 ```
 
-This code outputs the following:
+このコードは次を出力します：
 
 ```
 "red"
@@ -383,22 +383,22 @@ This code outputs the following:
 1234
 5678
 9012
-"Understanding ECMAScript 6"
+"Understanding ECMAScript6"
 "ebook"
 ```
 
-Calling the `values()` iterator, as in this example, returns the exact data contained in each collection without any information about that data's location in the collection.
+この例のように`values()`イテレータを呼び出すと、コレクション内のそのデータの場所に関する情報を持たずに、各コレクションに含まれる正確なデータが返されます。
 
-#### The keys() Iterator
+#### keys()Iterator
 
-The `keys()` iterator returns each key present in a collection. For arrays, it only returns numeric keys, never other own properties of the array. For sets, the keys are the same as the values, and so `keys()` and `values()` return the same iterator. For maps, the `keys()` iterator returns each unique key. Here's an example that demonstrates all three:
+`keys()`イテレータは、コレクションに存在する各キーを返します。 配列の場合、数値キーのみを返します。配列の他のプロパティは決して返しません。 セットの場合、キーは値と同じであるため、`keys()`と`values()`は同じイテレータを返します。 マップの場合、`keys()`イテレータはそれぞれのユニークキーを返します。 次の3つの例を示します。
 
 ```js
 let colors = [ "red", "green", "blue" ];
 let tracking = new Set([1234, 5678, 9012]);
 let data = new Map();
 
-data.set("title", "Understanding ECMAScript 6");
+data.set("title", "Understanding ECMAScript6");
 data.set("format", "ebook");
 
 for (let key of colors.keys()) {
@@ -414,7 +414,7 @@ for (let key of data.keys()) {
 }
 ```
 
-This example outputs the following:
+この例では、次のものが出力されます。
 
 ```
 0
@@ -427,18 +427,18 @@ This example outputs the following:
 "format"
 ```
 
-The `keys()` iterator fetches each key in `colors`, `tracking`, and `data`, and those keys are printed from inside the three `for-of` loops. For the array object, only numeric indices are printed, which would still happen even if you added named properties to the array. This is different from the way the `for-in` loop works with arrays, because the `for-in` loop iterates over properties rather than just the numeric indices.
+`keys()`イテレータは、`colors`、`tracking`、`data`の各キーを取り出し、3つの`for-of`ループの内側から出力します。 配列オブジェクトでは、数値のインデックスのみが出力されます。これは、名前付きのプロパティを配列に追加したとしても発生します。 これは`for-in`ループが単に数値インデックスではなくプロパティを繰り返し処理するため、`for-in`ループが配列で動作する方法とは異なります。
 
-#### Default Iterators for Collection Types
+#### コレクション型のデフォルトイテレータ
 
-Each collection type also has a default iterator that is used by `for-of` whenever an iterator isn't explicitly specified. The `values()` method is the default iterator for arrays and sets, while the `entries()` method is the default iterator for maps. These defaults make using collection objects in `for-of` loops a little easier. For instance, consider this example:
+各コレクション型には、イテレータが明示的に指定されていないときに`for-of`によって使用されるデフォルトのイテレータもあります。`values()`メソッドは配列とセットのデフォルトイテレータであり、`entries()`メソッドはマップのデフォルトイテレータです。 これらのデフォルトは`for-of`ループ内のコレクションオブジェクトを使用するのを少し容易にします。 たとえば、次の例を考えてみましょう。
 
 ```js
 let colors = [ "red", "green", "blue" ];
 let tracking = new Set([1234, 5678, 9012]);
 let data = new Map();
 
-data.set("title", "Understanding ECMAScript 6");
+data.set("title", "Understanding ECMAScript6");
 data.set("format", "print");
 
 // same as using colors.values()
@@ -457,7 +457,7 @@ for (let entry of data) {
 }
 ```
 
-No iterator is specified, so the default iterator functions will be used. The default iterators for arrays, sets, and maps are designed to reflect how these objects are initialized, so this code outputs the following:
+イテレーターは指定されていないので、デフォルトのイテレーター関数が使用されます。 配列、セット、マップのデフォルトのイテレーターは、これらのオブジェクトの初期化方法を反映するように設計されているため、このコードは以下を出力します。
 
 ```
 "red"
@@ -466,33 +466,33 @@ No iterator is specified, so the default iterator functions will be used. The de
 1234
 5678
 9012
-["title", "Understanding ECMAScript 6"]
+["title", "Understanding ECMAScript6"]
 ["format", "print"]
 ```
 
-Arrays and sets return their values by default, while maps return the same array format that can be passed into the `Map` constructor. Weak sets and weak maps, on the other hand, do not have built-in iterators. Managing weak references means there's no way to know exactly how many values are in these collections, which also means there's no way to iterate over them.
+配列とセットはデフォルトで値を返し、マップは`Map`コンストラクタに渡すことができる配列フォーマットを返します。 一方、弱いセットと弱いマップには、イテレータが組み込まれていません。 弱参照を管理するということは、これらのコレクションに含まれる値の数を正確に知る方法がないことを意味します。つまり、それらのコレクションを反復する方法はありません。
 
-A> ### Destructuring and for-of Loops
+A> ###構造化とfor-ofループ
 A>
-A> The behavior of the default iterator for maps is also helpful when used in `for-of` loops with destructuring, as in this example:
+A>マップのデフォルトのイテレータの動作は、この例のように、非構造化の`for-of`ループで使用すると役に立ちます：
 A>
-A> ```js
+A>```js
 A> let data = new Map();
 A>
-A> data.set("title", "Understanding ECMAScript 6");
+A> data.set("title", "Understanding ECMAScript6");
 A> data.set("format", "ebook");
 A>
 A> // same as using data.entries()
 A> for (let [key, value] of data) {
 A>     console.log(key + "=" + value);
 A> }
-A> ```
+A>```
 A>
-A> The `for-of` loop in this code uses a destructured array to assign `key` and `value` for each entry in the map. In this way, you can easily work with keys and values at the same time without needing to access a two-item array or going back to the map to fetch either the key or the value. Using a destructured array for maps makes the `for-of` loop equally useful for maps as it is for sets and arrays.
+A>このコードの`for-of`ループは、非構造化配列を使ってマップの各エントリに`key`と`value`を割り当てます。 このようにして、2つのアイテムの配列にアクセスしたり、キーまたは値のいずれかを取得するためにマップに戻ったりすることなく、キーと値を同時に簡単に操作できます。 マップに非構造化配列を使用すると、`for-of`ループはマップの場合と同じようにセットと配列のために便利です。
 
-### String Iterators
+### ストリングイテレータ
 
-JavaScript strings have slowly become more like arrays since ECMAScript 5 was released. For example, ECMAScript 5 formalized bracket notation for accessing characters in strings (that is, using `text[0]` to get the first character, and so on). But bracket notation works on code units rather than characters, so it cannot be used to access double-byte characters correctly, as this example demonstrates:
+JavaScript文字列は、ECMAScript5がリリースされて以来、ゆっくりと配列に似ています。 例えば、ECMAScript5は、文字列内の文字にアクセスするためのブラケット表記を形式化しています(つまり、最初の文字を得るために`text [0]`を使用します)。 しかし、ブラケット記法は文字ではなくコード単位で機能するので、2バイト文字に正しくアクセスするために使用することはできません。
 
 ```js
 var message = "A  B";
@@ -502,7 +502,7 @@ for (let i=0; i < message.length; i++) {
 }
 ```
 
-This code uses bracket notation and the `length` property to iterate over and print a string containing a Unicode character. The output is a bit unexpected:
+このコードでは、ブラケット記法と`length`プロパティを使用して、Unicode文字を含む文字列を繰り返して出力します。 出力は予期せぬものです。
 
 ```
 A
@@ -513,9 +513,9 @@ A
 B
 ```
 
-Since the double-byte character is treated as two separate code units, there are four empty lines between `A` and `B` in the output.
+2バイト文字は2つの別々のコード単位として扱われるので、出力には`A`と`B`の間に4つの空行があります。
 
-Fortunately, ECMAScript 6 aims to fully support Unicode (see Chapter 2), and the default string iterator is an attempt to solve the string iteration problem. As such, the default iterator for strings works on characters rather than code units. Changing this example to use the default string iterator with a `for-of` loop results in more appropriate output. Here's the tweaked code:
+幸いにも、ECMAScript6はUnicode(第2章を参照)を完全にサポートすることを目指しており、デフォルトの文字列反復子は文字列反復問題を解決する試みです。 そのため、文字列のデフォルトイテレータはコード単位ではなく文字で動作します。 この例を変更して、デフォルトの文字列イテレータを`for-of`ループで使用すると、より適切な出力が得られます。 ここには微調整されたコードがあります：
 
 
 ```js
@@ -526,7 +526,7 @@ for (let c of message) {
 }
 ```
 
-This outputs the following:
+これにより、以下が出力されます。
 
 ```
 A
@@ -536,13 +536,13 @@ A
 B
 ```
 
-This result is more in line with what you'd expect when working with characters: the loop successfully prints the Unicode character, as well as all the rest.
+この結果は、文字を扱うときの期待に沿ったものになります。ループはUnicode文字だけでなく残りの文字も正常に出力します。
 
-### NodeList Iterators
+### NodeListイテレータ
 
-The Document Object Model (DOM) has a `NodeList` type that represents a collection of elements in a document. For those who write JavaScript to run in web browsers, understanding the difference between `NodeList` objects and arrays has always been a bit difficult. Both `NodeList` objects and arrays use the `length` property to indicate the number of items, and both use bracket notation to access individual items. Internally, however, a `NodeList` and an array behave quite differently, which has led to a lot of confusion.
+DOM(Document Object Model)には、ドキュメント内の要素のコレクションを表す`NodeList`型があります。 JavaScriptをWebブラウザで実行する人にとって、`NodeList`オブジェクトと配列の違いを理解することは、常に少し難しかったです。`NodeList`オブジェクトと配列はどちらも`length`プロパティを使って項目の数を示し、両方とも括弧表記を使って個々の項目にアクセスします。しかし、内部的には、`NodeList`と配列は全く異なった振る舞いをするので、多くの混乱を招いています。
 
-With the addition of default iterators in ECMAScript 6, the DOM definition of `NodeList` (included in the HTML specification rather than ECMAScript 6 itself) includes a default iterator that behaves in the same manner as the array default iterator. That means you can use `NodeList` in a `for-of` loop or any other place that uses an object's default iterator. For example:
+ECMAScript6にデフォルトイテレータを追加すると、NodeList(ECMAScript6自体ではなくHTML仕様に含まれる)のDOM定義には、配列のデフォルトイテレータと同じように動作するデフォルトイテレータが含まれます。つまり、`for-of`ループやオブジェクトのデフォルトイテレータを使用する他の場所で`NodeList`を使うことができます。例えば：
 
 ```js
 var divs = document.getElementsByTagName("div");
@@ -552,11 +552,11 @@ for (let div of divs) {
 }
 ```
 
-This code calls `getElementsByTagName()` to retrieve a `NodeList` that represents all of the `<div>` elements in the `document` object. The `for-of` loop then iterates over each element and outputs the element IDs, effectively making the code the same as it would be for a standard array.
+このコードは、`document`オブジェクトのすべての`<div>`要素を表す`NodeList`を取得するために`getElementsByTagName()`を呼び出します。`for-of`ループは各要素を繰り返し処理して要素IDを出力し、標準配列と同じようにコードを効果的に作ります。
 
-## The Spread Operator and Non-Array Iterables
+## スプレッドオペレータと非配列イテラブル
 
-Recall from Chapter 7 that the spread operator (`...`) can be used to convert a set into an array. For example:
+第7章から拡散演算子(`...`)を使って、集合を配列に変換することができることを思い出してください。 例えば：
 
 ```js
 let set = new Set([1, 2, 3, 3, 3, 4, 5]),
@@ -565,7 +565,7 @@ let set = new Set([1, 2, 3, 3, 3, 4, 5]),
 console.log(array);             // [1,2,3,4,5]
 ```
 
-This code uses the spread operator inside an array literal to fill in that array with the values from `set`. The spread operator works on all iterables and uses the default iterator to determine which values to include. All values are read from the iterator and inserted into the array in the order in which values were returned from the iterator. This example works because sets are iterables, but it can work equally well on any iterable. Here's another example:
+このコードでは、配列リテラル内のspread演算子を使用して、その配列を`set`の値で埋めています。 スプレッド演算子はすべてのiterableで動作し、デフォルトのiteratorを使用してどの値を含めるかを決定します。 すべての値はイテレータから読み込まれ、イテレータから返された値の順序で配列に挿入されます。 この例は、セットがiterableなので動作しますが、どのiterableでも同じように動作します。 別の例があります：
 
 ```js
 let map = new Map([ ["name", "Nicholas"], ["age", 25]]),
@@ -574,9 +574,9 @@ let map = new Map([ ["name", "Nicholas"], ["age", 25]]),
 console.log(array);         // [ ["name", "Nicholas"], ["age", 25]]
 ```
 
-Here, the spread operator converts `map` into an array of arrays. Since the default iterator for maps returns key-value pairs, the resulting array looks like the array that was passed during the `new Map()` call.
+ここで、スプレッド演算子は`map`を配列の配列に変換します。 マップのデフォルトのイテレータはキーと値のペアを返すので、結果の配列は`new Map()`の呼び出しで渡された配列のように見えます。
 
-You can use the spread operator in an array literal as many times as you want, and you can use it wherever you want to insert multiple items from an iterable. Those items will just appear in order in the new array at the location of the spread operator. For example:
+配列リテラルでは、スプレッド演算子を何度でも使用できます。繰り返し演算子から複数の項目を挿入する場合は、どこでも使用できます。 これらの項目は、スプレッド演算子の位置にある新しい配列内に順番に表示されます。 例えば：
 
 ```js
 let smallNumbers = [1, 2, 3],
@@ -587,19 +587,19 @@ console.log(allNumbers.length);     // 7
 console.log(allNumbers);    // [0, 1, 2, 3, 100, 101, 102]
 ```
 
-The spread operator is used to create `allNumbers` from the values in `smallNumbers` and `bigNumbers`. The values are placed in `allNumbers` in the same order the arrays are added when `allNumbers` is created: `0` is first, followed by the values from `smallNumbers`, followed by the values from `bigNumbers`. The original arrays are unchanged, though, as their values have just been copied into `allNumbers`.
+spread演算子は`smallNumbers`と`bigNumbers`の値から`allNumbers`を作成するために使われます。値は、`allNumbers`が作成されたときに配列が追加されるのと同じ順序で`allNumbers`に配置されます。`0`が最初に続き、`smallNumbers`の値に続いて`bigNumbers`の値が続きます。しかし元の配列は変更されていませんが、その値は`allNumbers`にコピーされただけです。
 
-Since the spread operator can be used on any iterable, it's the easiest way to convert an iterable into an array. You can convert strings into arrays of characters (not code units) and `NodeList` objects in the browser into arrays of nodes.
+スプレッド演算子は任意のiterableで使用できるので、iterableを配列に変換するのが最も簡単な方法です。文字列を文字の配列(コード単位ではない)に変換し、ブラウザの`NodeList`オブジェクトをノードの配列に変換することができます。
 
-Now that you understand the basics of how iterators work, including `for-of` and the spread operator, it's time to look at some more complex uses of iterators.
+for-ofやspreadオペレータなど、イテレータの動作の基本を理解したので、イテレータの複雑な使い方を見てみましょう。
 
-## Advanced Iterator Functionality
+## 高度なイテレータ機能
 
-You can accomplish a lot with the basic functionality of iterators and the convenience of creating them using generators. However, iterators are much more powerful when used for tasks other than simply iterating over a collection of values. During the development of ECMAScript 6, a lot of unique ideas and patterns emerged that encouraged the creators to add more functionality. Some of those additions are subtle, but when used together, can accomplish some interesting interactions.
+イテレーターの基本機能とジェネレーターを使用したイテレーターの作成の利便性によって、多くのことが達成できます。しかし、イテレータは、単に値の集合を反復する以外のタスクに使用すると、はるかに強力です。 ECMAScript6の開発中に、クリエイターがより多くの機能を追加するように促すユニークなアイデアやパターンが多数登場しました。これらの追加の一部は微妙ですが、一緒に使用すると面白いやりとりを実現できます。
 
-### Passing Arguments to Iterators
+### イテレータへの引数の受け渡し
 
-Throughout this chapter, examples have shown iterators passing values out via the `next()` method or by using `yield` in a generator. But you can also pass arguments to the iterator through the `next()` method. When an argument is passed to the `next()` method, that argument becomes the value of the `yield` statement inside a generator. This capability is important for more advanced functionality such as asynchronous programming. Here's a basic example:
+この章では、イテレータが`next()`メソッドで値を渡すか、ジェネレータで`yield`を使う例を示しました。しかし、`next()`メソッドを使って反復子に引数を渡すこともできます。引数が`next()`メソッドに渡されると、その引数はジェネレータ内部の`yield`ステートメントの値になります。この機能は、非同期プログラミングなどの高度な機能にとって重要です。基本的な例を次に示します。
 
 ```js
 function *createIterator() {
@@ -616,23 +616,23 @@ console.log(iterator.next(5));          // "{ value: 8, done: false }"
 console.log(iterator.next());           // "{ value: undefined, done: true }"
 ```
 
-The first call to `next()` is a special case where any argument passed to it is lost. Since arguments passed to `next()` become the values returned by `yield`, an argument from the first call to `next()` could only replace the first yield statement in the generator function if it could be accessed before that `yield` statement. That's not possible, so there's no reason to pass an argument the first time `next()` is called.
+`next()`への最初の呼び出しは、それに渡された引数が失われる特殊なケースです。`next()`に渡される引数は`yield`によって返される値になるので、`next()`への最初の呼び出しからの引数は、`yield`ステートメント。これは不可能なので、`next()`が最初に呼び出されたときに引数を渡す理由はありません。
 
-On the second call to `next()`, the value `4` is passed as the argument. The `4` ends up assigned to the variable `first` inside the generator function. In a `yield` statement including an assignment, the right side of the expression is evaluated on the first call to `next()` and the left side is evaluated on the second call to `next()` before the function continues executing. Since the second call to `next()` passes in `4`, that value is assigned to `first` and then execution continues.
+`next()`の2回目の呼び出しでは、引数として値 '4'が渡されます。`4`は、ジェネレータ関数内の変数`first`に割り当てられます。代入を含む`yield`ステートメントでは、式の右辺は`next()`の最初の呼び出しで評価され、左辺は関数が実行を続ける前に`next()`の2回目の呼び出しで評価されます。`next()`への2回目の呼び出しは`4 'で渡されるので、その値は`first`に割り当てられてから実行が続けられます。
 
-The second `yield` uses the result of the first `yield` and adds two, which means it returns a value of six. When `next()` is called a third time, the value `5` is passed as an argument. That value is assigned to the variable `second` and then used in the third `yield` statement to return `8`.
+2番目の`yield`は最初の`yield`の結果を使用して2を加算します。つまり、6の値を返します。`next()`が3回目に呼び出されると、値として '5'が引数として渡されます。その値は変数`second`に代入され、次に第3の`yield`ステートメントで`8`を返すために使われます。
 
-It's a bit easier to think about what's happening by considering which code is executing each time execution continues inside the generator function. Figure 8-1 uses colors to show the code being executed before yielding.
+実行がジェネレータ関数内で継続するたびに、どのコードが実行されているかを検討することで、何が起こっているのかを考えるのは簡単です。図8-1では、色を使用して降伏前に実行されているコードを示しています。
 
 ![Figure 8-1: Code execution inside a generator](images/fg0601.png)
 
-The color yellow represents the first call to `next()` and all the code executed inside of the generator as a result. The color aqua represents the call to `next(4)` and the code that is executed with that call. The color purple represents the call to `next(5)` and the code that is executed as a result. The tricky part is how the code on the right side of each expression executes and stops before the left side is executed. This makes debugging complicated generators a bit more involved than debugging regular functions.
+黄色は`next()`への最初の呼び出しと、その結果としてジェネレータ内部で実行されるすべてのコードを表します。カラーアクアは、`next(4)`の呼び出しとその呼び出しで実行されるコードを表します。紫色は`next(5)`への呼び出しとその結果として実行されるコードを表します。トリッキーな部分は、左辺が実行される前に、各式の右側のコードがどのように実行され、停止するかです。これにより、複雑なジェネレータは通常の関数をデバッグするよりも複雑になります。
 
-So far, you've seen that `yield` can act like `return` when a value is passed to the `next()` method. However, that's not the only execution trick you can do inside a generator. You can also cause iterators throw an error.
+これまでは、`yield()`メソッドが`next()`メソッドに値が渡されたときに`yield`が`return`のように働くことが分かりました。しかし、ジェネレータの中で実行できる唯一の実行トリックではありません。イテレータがエラーをスローする可能性もあります。
 
-### Throwing Errors in Iterators
+### イテレータでの投げ込みエラー
 
-It's possible to pass not just data into iterators but also error conditions. Iterators can choose to implement a `throw()` method that instructs the iterator to throw an error when it resumes. This is an important capability for asynchronous programming, but also for flexibility inside generators, where you want to be able to mimic both return values and thrown errors (the two ways of exiting a function). You can pass an error object to `throw()` that should be thrown when the iterator continues processing. For example:
+イテレータにデータを渡すだけでなく、エラー条件も渡すことができます。反復子は、イテレータが再開時にエラーをスローするよう指示する`throw()`メソッドを実装することを選択できます。これは非同期プログラミングにとって重要な機能ですが、戻り値とスローされたエラー(関数を終了する2つの方法)の両方を模倣できるようにする、ジェネレータ内部の柔軟性のためにも重要です。イテレータが処理を続行するときにスローされるべき`throw()`にエラーオブジェクトを渡すことができます。例えば：
 
 ```js
 function *createIterator() {
@@ -648,13 +648,13 @@ console.log(iterator.next(4));                  // "{ value: 6, done: false }"
 console.log(iterator.throw(new Error("Boom"))); // error thrown from generator
 ```
 
-In this example, the first two `yield` expressions are evaluated as normal, but when `throw()` is called, an error is thrown before `let second` is evaluated. This effectively halts code execution similar to directly throwing an error. The only difference is the location in which the error is thrown. Figure 8-2 shows which code is executed at each step.
+この例では、最初の2つの`yield`式は通常通り評価されますが、`throw()`が呼び出されると、`let second`が評価される前にエラーがスローされます。 これにより、エラーを直接スローするのと同様に、コードの実行が停止します。 唯一の違いは、エラーがスローされる場所です。 図8-2に、各ステップで実行されるコードを示します。
 
 ![Figure 8-2: Throwing an error inside a generator](images/fg0602.png)
 
-In this figure, the color red represents the code executed when `throw()` is called, and the red star shows approximately when the error is thrown inside the generator. The first two `yield` statements are executed, and when `throw()` is called, an error is thrown before any other code executes.
+この図では、赤色は`throw()`が呼び出されたときに実行されるコードを表し、赤い星印はジェネレータ内部でエラーがスローされたときにほぼ表示されます。 最初の2つの`yield`文が実行され、`throw()`が呼び出されると、他のコードが実行される前にエラーがスローされます。
 
-Knowing this, you can catch such errors inside the generator using a `try-catch` block:
+これを知っているなら、`try-catch`ブロックを使ってジェネレータ内部でそのようなエラーを捕まえることができます：
 
 ```js
 function *createIterator() {
@@ -677,17 +677,17 @@ console.log(iterator.throw(new Error("Boom"))); // "{ value: 9, done: false }"
 console.log(iterator.next());                   // "{ value: undefined, done: true }"
 ```
 
-In this example, a `try-catch` block is wrapped around the second `yield` statement. While this `yield` executes without error, the error is thrown before any value can be assigned to `second`, so the `catch` block assigns it a value of six. Execution then flows to the next `yield` and returns nine.
+この例では、`try-catch`ブロックが2番目の`yield`ステートメントの周りにラップされています。この`yield`はエラーなしで実行されますが、`second`に値を代入する前にエラーがスローされるため、`catch`ブロックには値6が代入されます。実行は次の`yield`に流れ、9を返します。
 
-Notice that something interesting happened: the `throw()` method returned a result object just like the `next()` method. Because the error was caught inside the generator, code execution continued on to the next `yield` and returned the next value, `9`.
+興味深いことが起こったことに注目してください。`throw()`メソッドは`next()`メソッドのように結果オブジェクトを返しました。エラーがジェネレータ内部で捕捉されたため、コード実行は次の`yield`に続き、次の値`9`を返しました。
 
-It helps to think of `next()` and `throw()` as both being instructions to the iterator. The `next()` method instructs the iterator to continue executing (possibly with a given value) and `throw()` instructs the iterator to continue executing by throwing an error. What happens after that point depends on the code inside the generator.
+これは、`next()`と`throw()`をイテレータの両方の命令として考えるのに役立ちます。`next()`メソッドは反復子に実行を継続するよう指示し、`throw()`は反復子にエラーを投げて実行を続けるよう指示します。その時点以降は、ジェネレーター内のコードに依存します。
 
-The `next()` and `throw()` methods control execution inside an iterator when using `yield`, but you can also use the `return` statement. But `return` works a bit differently than it does in regular functions, as you will see in the next section.
+`next()`と`throw()`メソッドは`yield`を使うときイテレータ内の実行を制御しますが、`return`ステートメントを使うこともできます。しかし、`return`は通常の関数とは少し違って動作します。これについては次のセクションで説明します。
 
-### Generator Return Statements
+### 発電機のリターン・ステートメント
 
-Since generators are functions, you can use the `return` statement both to exit early and  specify a return value for the last call to the `next()` method. In most examples in this chapter, the last call to `next()` on an iterator returns `undefined`, but you can specify an alternate value by using `return` as you would in any other function. In a generator, `return` indicates that all processing is done, so the `done` property is set to `true` and the value, if provided, becomes the `value` field. Here's an example that simply exits early using `return`:
+ジェネレータは関数なので、`return`文を使って早期に終了し、`next()`メソッドへの最後の呼び出しの戻り値を指定することができます。この章のほとんどの例では、イテレータの`next()`を最後に呼び出すと`undefined`が返されますが、他の関数と同様に`return`を使って代替値を指定することができます。ジェネレータでは、`return`はすべての処理が完了したことを示しているので、`done`プロパティは`true`に設定され、値が与えられれば`value`フィールドになります。早期に`return`を使用して終了する例を次に示します。
 
 ```js
 function *createIterator() {
@@ -703,9 +703,9 @@ console.log(iterator.next());           // "{ value: 1, done: false }"
 console.log(iterator.next());           // "{ value: undefined, done: true }"
 ```
 
-In this code, the generator has a `yield` statement followed by a `return` statement. The `return` indicates that there are no more values to come, and so the rest of the `yield` statements will not execute (they are unreachable).
+このコードでは、ジェネレータには`yield`ステートメントとそれに続く`return`ステートメントがあります。`return`はそれ以上来るべき値がないことを示し、残りの`yield`ステートメントは実行されません(到達できません)。
 
-You can also specify a return value that will end up in the `value` field of the returned object. For example:
+また、返されるオブジェクトの`value`フィールドに終わる戻り値を指定することもできます。 例えば：
 
 ```js
 function *createIterator() {
@@ -720,13 +720,13 @@ console.log(iterator.next());           // "{ value: 42, done: true }"
 console.log(iterator.next());           // "{ value: undefined, done: true }"
 ```
 
-Here, the value `42` is returned in the `value` field on the second call to the `next()` method (which is the first time that `done` is `true`). The third call to `next()` returns an object whose `value` property is once again `undefined`. Any value you specify with `return` is only available on the returned object one time before the `value` field is reset to `undefined`.
+ここで、`next`(`done`が`true`である最初の)メソッドへの2回目の呼び出しで`value`フィールドに値`42`が返されます。`next()`への3回目の呼び出しは、`value`プロパティが再び`undefined`であるオブジェクトを返します。`return`で指定した値は、`value`フィールドが`undefined`にリセットされる前に、返されたオブジェクトで1回だけ使用できます。
 
-I> The spread operator and `for-of` ignore any value specified by a `return` statement. As soon as they see `done` is `true`, they stop without reading the `value`. Iterator return values are helpful, however, when delegating generators.
+I>スプレッド演算子と`for-of`は`return`ステートメントで指定された値を無視します。`done`が`true`であるとすぐに`value`を読まずに停止します。 ただし、ジェネレータを委譲するときは、イテレータの戻り値が役立ちます。
 
-### Delegating Generators
+### ジェネレータの委任
 
-In some cases, combining the values from two iterators into one is useful. Generators can delegate to other iterators using a special form of `yield` with a star (`*`) character. As with generator definitions, where the star appears doesn't matter, as long as the star falls between the `yield` keyword and the generator function name. Here's an example:
+場合によっては、2つのイテレータの値を1つに組み合わせると便利です。 ジェネレータは、星型(`*`)の文字を持つ特別な形式の`yield`を使って他のイテレータに委譲することができます。 ジェネレータ定義の場合と同様に、星が現れる場所は、星が`yield`キーワードとジェネレータ関数名の間にある限り重要ではありません。 ここに例があります：
 
 ```js
 function *createNumberIterator() {
@@ -755,9 +755,9 @@ console.log(iterator.next());           // "{ value: true, done: false }"
 console.log(iterator.next());           // "{ value: undefined, done: true }"
 ```
 
-In this example, the `createCombinedIterator()` generator delegates first to the iterator returned from `createNumberIterator()` and then to the iterator returned from `createColorIterator()`. The iterator returned from `createCombinedIterator()` appears, from the outside, to be one consistent iterator that has produced all of the values. Each call to `next()` is delegated to the appropriate iterator until the iterators created by `createNumberIterator()` and `createColorIterator()` are empty. Then the final `yield` is executed to return `true`.
+この例では、`createCombinedIterator()`ジェネレータは`createNumberIterator()`から返されたイテレータに、次に`createColorIterator()`から返されたイテレータに委譲します。`createCombinedIterator()`から返されたイテレータは、外部からすべての値を生成した一貫したイテレータになるように見えます。`next()`に対する各呼び出しは、`createNumberIterator()`と`createColorIterator()`によって作成されたイテレータが空になるまで適切なイテレータに委譲されます。 最終的な`yield`が`true`を返すために実行されます。
 
-Generator delegation also lets you make further use of generator return values. This is the easiest way to access such returned values and can be quite useful in performing complex tasks. For example:
+ジェネレータの委任によって、ジェネレータの戻り値をさらに利用することもできます。 これは、そのような戻り値にアクセスする最も簡単な方法であり、複雑なタスクを実行する上で非常に役立ちます。 例えば：
 
 ```js
 function *createNumberIterator() {
@@ -787,9 +787,9 @@ console.log(iterator.next());           // "{ value: "repeat", done: false }"
 console.log(iterator.next());           // "{ value: undefined, done: true }"
 ```
 
-Here, the `createCombinedIterator()` generator delegates to `createNumberIterator()` and assigns the return value to `result`. Since `createNumberIterator()` contains `return 3`, the returned value is `3`. The `result` variable is then passed to `createRepeatingIterator()` as an argument indicating how many times to yield the same string (in this case, three times).
+ここで、`createCombinedIterator()`ジェネレータは`createNumberIterator()`に委譲し、戻り値を`result`に代入します。`createNumberIterator()`は`return 3`を含んでいるので、返される値は`3`です。`result`変数は、同じ文字列を返す回数(この場合は3回)を示す引数として`createRepeatingIterator()`に渡されます。
 
-Notice that the value `3` was never output from any call to the `next()` method. Right now, it exists solely inside the `createCombinedIterator()` generator. But you can output that value as well by adding another `yield` statement, such as:
+値`3`は`next()`メソッドの呼び出しから決して出力されなかったことに注意してください。 今は`createCombinedIterator()`ジェネレータの内部にのみ存在します。 しかし、次のような別の`yield`ステートメントを追加して、その値を出力することもできます：
 
 ```js
 function *createNumberIterator() {
@@ -821,17 +821,17 @@ console.log(iterator.next());           // "{ value: "repeat", done: false }"
 console.log(iterator.next());           // "{ value: undefined, done: true }"
 ```
 
-In this code, the extra `yield` statement explicitly outputs the returned value from the `createNumberIterator()` generator.
+このコードでは、余分な`yield`文が`createNumberIterator()`ジェネレータから返された値を明示的に出力します。
 
-Generator delegation using the return value is a very powerful paradigm that allows for some very interesting possibilities, especially when used in conjunction with asynchronous operations.
+戻り値を使用するジェネレータの委譲は、特に非同期操作と組み合わせて使用​​する場合、非常に興味深い可能性を可能にする非常に強力なパラダイムです。
 
-I> You can use `yield *` directly on strings (such as `yield * "hello"`) and the string's default iterator will be used.
+I>文字列(`yield *" hello "`など)に`yield *`を直接使うことができ、文字列のデフォルトイテレータが使用されます。
 
-## Asynchronous Task Running
+## 非同期タスク実行中
 
-A lot of the excitement around generators is directly related to asynchronous programming. Asynchronous programming in JavaScript is a double-edged sword: simple tasks are easy to do asynchronously, while complex tasks become an errand in code organization. Since generators allow you to effectively pause code in the middle of execution, they open up a lot of possibilities related to asynchronous processing.
+ジェネレータの周りの興奮の多くは、非同期プログラミングに直接関係しています。 JavaScriptの非同期プログラミングは両刃の剣です。シンプルなタスクは非同期で行うのが簡単で、複雑なタスクはコード構成の邪魔になります。ジェネレータを使用すると、実行中にコードを効果的に停止することができるため、非同期処理に関連する多くの可能性が開かれます。
 
-The traditional way to perform asynchronous operations is to call a function that has a callback. For example, consider reading a file from the disk in Node.js:
+非同期操作を実行する従来の方法は、コールバックを持つ関数を呼び出すことです。たとえば、Node.js内のディスクからファイルを読み取る場合を考えます。
 
 ```js
 let fs = require("fs");
@@ -846,11 +846,11 @@ fs.readFile("config.json", function(err, contents) {
 });
 ```
 
-The `fs.readFile()` method is called with the filename to read and a callback function. When the operation is finished, the callback function is called. The callback checks to see if there's an error, and if not, processes the returned `contents`. This works well when you have a small, finite number of asynchronous tasks to complete, but gets complicated when you need to nest callbacks or otherwise sequence a series of asynchronous tasks. This is where generators and `yield` are helpful.
+`fs.readFile()`メソッドは、読み込むファイル名とコールバック関数とともに呼び出されます。 操作が終了すると、コールバック関数が呼び出されます。 コールバックはエラーがあるかどうかをチェックし、そうでなければ、返された`contents`を処理します。 小さな非同期タスクを完了するために、限られた数の非同期タスクがある場合はうまくいくが、コールバックをネストしたり、一連の非同期タスクをシーケンスする必要がある場合は複雑になります。 これはジェネレータと`yield`が役に立ちます。
 
-### A Simple Task Runner
+### 単純なタスクランナー
 
-Because `yield` stops execution and waits for the `next()` method to be called before starting again, you can implement asynchronous calls without managing callbacks. To start, you need a function that can call a generator and start the iterator, such as this:
+`yield`は実行を停止し、`next()`メソッドが再び呼び出されるのを待っているので、コールバックを管理せずに非同期呼び出しを実装できます。 まず、ジェネレータを呼び出してイテレータを開始できる関数が必要です。
 
 ```js
 function run(taskDef) {
@@ -877,9 +877,9 @@ function run(taskDef) {
 }
 ```
 
-The `run()` function accepts a task definition (a generator function) as an argument. It calls the generator to create an iterator and stores the iterator in `task`. The `task` variable is outside the function so it can be accessed by other functions; I will explain why later in this section. The first call to `next()` begins the iterator and the result is stored for later use. The `step()` function checks to see if `result.done` is false and, if so, calls `next()` before recursively calling itself. Each call to `next()` stores the return value in `result`, which is always overwritten to contain the latest information. The initial call to `step()` starts the process of looking at the `result.done` variable to see whether there's more to do.
+`run()`関数はタスク定義(ジェネレータ関数)を引数として受け付けます。 ジェネレータを呼び出してイテレータを作成し、イテレータを`task`に格納します。`task`変数は関数の外にあり、他の関数からアクセスすることができます。 私はこのセクションの後半の理由を説明します。`next()`への最初の呼び出しはイテレータを開始し、結果は後で使用するために保存されます。`step()`関数は`result.done`が偽であるかどうかを調べ、もしそうなら、再帰的に自身を呼び出す前に`next()`を呼び出します。`next()`を呼び出すたびに戻り値が`result`に格納されます。これは常に最新の情報を含むように上書きされます。`step()`への最初の呼び出しは、`result.done`変数を調べて、それ以上のことがあるかどうかを確認するプロセスを開始します。
 
-With this implementation of `run()`, you can run a generator containing multiple `yield` statements, such as:
+この`run()`の実装では、以下のような複数の`yield`文を含むジェネレータを実行することができます：
 
 ```js
 run(function*() {
@@ -891,11 +891,11 @@ run(function*() {
 });
 ```
 
-This example just outputs three numbers to the console, which simply shows that all calls to `next()` are being made. However, just yielding a couple of times isn't very useful. The next step is to pass values into and out of the iterator.
+この例では、単に`next()`への呼び出しが行われていることを示す3つの数字をコンソールに出力します。 しかし、2〜3回しか得られないことはあまり有用ではありません。 次のステップでは、イテレータに値を渡したり、イテレータから値を渡したりします。
 
-### Task Running With Data
+### データで実行中のタスク
 
-The easiest way to pass data through the task runner is to pass the value specified by `yield` into the next call to the `next()` method. To do so, you need only pass `result.value`, as in this code:
+タスクランナーにデータを渡す最も簡単な方法は、`yield`で指定された値を`next()`メソッドの次の呼び出しに渡すことです。 これを行うには、次のコードのように`result.value`を渡すだけです：
 
 ```js
 function run(taskDef) {
@@ -922,7 +922,7 @@ function run(taskDef) {
 }
 ```
 
-Now that `result.value` is passed to `next()` as an argument, it's possible to pass data between `yield` calls, like this:
+`result.value`が引数として`next()`に渡されたので、`yield`呼び出しの間で次のようにデータを渡すことができます：
 
 ```js
 run(function*() {
@@ -934,13 +934,13 @@ run(function*() {
 });
 ```
 
-This example outputs two values to the console: 1 and 4. The value 1 comes from `yield 1`, as the 1 is passed right back into the `value` variable. The 4 is calculated by adding 3 to `value` and passing that result back to `value`. Now that data is flowing between calls to `yield`, you just need one small change to allow asynchronous calls.
+この例では、コンソールに1と4の2つの値を出力します。値1は、`value`変数に1が直ちに渡されるため、`yield 1`から取り出されます。 4は`value`に3を加え、その結果を`value`に返すことで計算されます。 データが`yield`への呼び出しの間に流れているので、非同期呼び出しを許可するにはちょっとした変更が必要です。
 
-### Asynchronous Task Runner
+### 非同期タスクランナー
 
-The previous example passed static data back and forth between `yield` calls, but waiting for an asynchronous process is slightly different. The task runner needs to know about callbacks and how to use them. And since `yield` expressions pass their values into the task runner, that means any function call must return a value that somehow indicates the call is an asynchronous operation that the task runner should wait for.
+前の例では、`yield`呼び出しの間で静的なデータを渡しましたが、非同期処理を待っているのとは少し異なります。 タスクランナーは、コールバックとその使用方法を知る必要があります。 そして、`yield`式はそれらの値をタスクランナーに渡すので、どの関数呼び出しも、その呼び出しがタスクランナーが待つべき非同期操作であることを何とか示す値を返す必要があります。
 
-Here's one way you might signal that a value is an asynchronous operation:
+値が非同期操作であることを知らせる1つの方法は次のとおりです。
 
 ```js
 function fetchData() {
@@ -950,7 +950,7 @@ function fetchData() {
 }
 ```
 
-For the purposes of this example, any function meant to be called by the task runner will return a function that executes a callback. The `fetchData()` function returns a function that accepts a callback function as an argument. When the returned function is called, it executes the callback function with a single piece of data (the `"Hi!"` string). The `callback` argument needs to come from the task runner to ensure executing the callback correctly interacts with the underlying iterator. While the `fetchData()` function is synchronous, you can easily extend it to be asynchronous by calling the callback with a slight delay, such as:
+この例では、タスクランナーによって呼び出されるすべての関数は、コールバックを実行する関数を返します。`fetchData()`関数は、引数としてコールバック関数を受け入れる関数を返します。 返された関数が呼び出されると、それは単一のデータ(``Hi！ "`文字列)でコールバック関数を実行します。`callback`引数はタスクランナから来て、コールバックの実行が根底にあるイテレータと正しく相互作用するようにする必要があります。`fetchData()`関数は同期式ですが、次のようなわずかな遅れでコールバックを呼び出すことで、非同期に簡単に拡張することができます：
 
 ```js
 function fetchData() {
@@ -962,9 +962,9 @@ function fetchData() {
 }
 ```
 
-This version of `fetchData()` introduces a 50ms delay before calling the callback, demonstrating that this pattern works equally well for synchronous and asynchronous code. You just have to make sure each function that wants to be called using `yield` follows the same pattern.
+このバージョンの`fetchData()`は、コールバックを呼び出す前に50msの遅延をもたらし、このパターンが同期コードと非同期コードで同じように機能することを示しています。`yield`を使って呼び出す各関数が同じパターンに従っていることを確認するだけです。
 
-With a good understanding of how a function can signal that it's an asynchronous process, you can modify the task runner to take that fact into account. Anytime `result.value` is a function, the task runner will execute it instead of just passing that value to the `next()` method. Here's the updated code:
+関数が非同期プロセスであることをどのように伝えるかをよく理解しているので、タスクランナーを変更してその事実を考慮に入れることができます。`result.value`が関数であるときはいつでも、タスクランナーはその値を`next()`メソッドに渡すのではなく、それを実行します。 更新されたコードは次のとおりです。
 
 ```js
 function run(taskDef) {
@@ -1004,9 +1004,9 @@ function run(taskDef) {
 }
 ```
 
-When `result.value` is a function (checked with the `===` operator), it is called with a callback function. That callback function follows the Node.js convention of passing any possible error as the first argument (`err`) and the result as the second argument. If `err` is present, then that means an error occurred and `task.throw()` is called with the error object instead of `task.next()` so an error is thrown at the correct location. If there is no error, then `data` is passed into `task.next()` and the result is stored. Then, `step()` is called to continue the process. When `result.value` is not a function, it is directly passed to the `next()` method.
+`result.value`が(`===`演算子でチェックされた)関数であるとき、それはコールバック関数で呼び出されます。 そのコールバック関数は、可能なエラーを第1引数(`err`)として渡し、結果を第2引数として渡すというNode.js規約に従います。`err`が存在する場合、エラーが発生したことを意味し、`task.throw()`は`task.next()`の代わりにエラーオブジェクトと共に呼び出され、正しい場所にエラーがスローされます。 エラーがなければ`data`が`task.next()`に渡され、結果が格納されます。 次に、`step()`が呼び出されて処理が続行されます。`result.value`が関数でないときは、`next()`メソッドに直接渡されます。
 
-This new version of the task runner is ready for all asynchronous tasks. To read data from a file in Node.js, you need to create a wrapper around `fs.readFile()` that returns a function similar to the `fetchData()` function from the beginning of this section. For example:
+この新しいバージョンのタスクランナーは、すべての非同期タスクに対応しています。 Node.jsのファイルからデータを読み込むには、このセクションの先頭から`fetchData()`関数に似た関数を返す`fs.readFile()`の周りにラッパーを作成する必要があります。 例えば：
 
 ```js
 let fs = require("fs");
@@ -1018,7 +1018,7 @@ function readFile(filename) {
 }
 ```
 
-The `readFile()` method accepts a single argument, the filename, and returns a function that calls a callback. The callback is passed directly to the `fs.readFile()` method, which will execute the callback upon completion. You can then run this task using `yield` as follows:
+`readFile()`メソッドは単一の引数ファイル名を受け取り、コールバックを呼び出す関数を返します。 コールバックは`fs.readFile()`メソッドに直接渡され、完了時にコールバックを実行します。 次のように`yield`を使ってこのタスクを実行することができます：
 
 ```js
 run(function*() {
@@ -1028,24 +1028,24 @@ run(function*() {
 });
 ```
 
-This example is performing the asynchronous `readFile()` operation without making any callbacks visible in the main code. Aside from `yield`, the code looks the same as synchronous code. As long as the functions performing asynchronous operations all conform to the same interface, you can write logic that reads like synchronous code.
+この例では、メインコードでコールバックを表示せずに非同期の`readFile()`操作を実行しています。`yield`とは別に、コードは同期コードと同じように見えます。非同期操作を実行する関数がすべて同じインターフェイスに準拠している限り、同期コードのようなロジックを書くことができます。
 
-Of course, there are downsides to the pattern used in these examples--namely that you can't always be sure a function that returns a function is asynchronous. For now, though, it's only important that you understand the theory behind the task running. Using promises offers more powerful ways of scheduling asynchronous tasks, and Chapter 11 covers this topic further.
+もちろん、これらの例で使用されているパターンには欠点があります。つまり、関数を返す関数が非同期であることを必ずしも確かめることはできません。今のところ、実行中のタスクの背後にある理論を理解することが重要です。プロミスを使用すると、非同期タスクをスケジューリングするためのより強力な方法が提供されます。第11章では、このトピックについて詳しく説明します。
 
-## Summary
+## まとめ
 
-Iterators are an important part of ECMAScript 6 and are at the root of several key language elements. On the surface, iterators provide a simple way to return a sequence of values using a simple API. However, there are far more complex ways to use iterators in ECMAScript 6.
+イテレータはECMAScript6の重要な部分であり、いくつかの重要な言語要素の根幹です。表面上では、イテレータは簡単なAPIを使用して一連の値を返す簡単な方法を提供します。しかし、ECMAScript6ではイテレータを使用するはるかに複雑な方法があります。
 
-The `Symbol.iterator` symbol is used to define default iterators for objects. Both built-in objects and developer-defined objects can use this symbol to provide a method that returns an iterator. When `Symbol.iterator` is provided on an object, the object is considered an iterable.
+`Symbol.iterator`シンボルは、オブジェクトのデフォルトイテレータを定義するために使用されます。ビルトインオブジェクトと開発者定義オブジェクトの両方で、このシンボルを使用してイテレータを返すメソッドを提供できます。`Symbol.iterator`がオブジェクトに与えられると、そのオブジェクトは反復可能と見なされます。
 
-The `for-of` loop uses iterables to return a series of values in a loop. Using `for-of` is easier than iterating with a traditional `for` loop because you no longer need to track values and control when the loop ends. The `for-of` loop automatically reads all values from the iterator until there are no more, and then it exits.
+`for-of`ループはiterablesを使ってループ内の一連の値を返します。`for-of`を使うのは、従来の`for`ループで繰り返すよりも簡単です。なぜなら、値を追跡する必要がなくなり、ループの終了時を制御する必要がなくなるからです。`for-of`ループはイテレータからすべての値を自動的に読み込み、それ以上がなくなると終了します。
 
-To make `for-of` easier to use, many values in ECMAScript 6 have default iterators. All the collection types--that is, arrays, maps, and sets--have iterators designed to make their contents easy to access. Strings also have a default iterator, which makes iterating over the characters of the string (rather than the code units) easy.
+for-ofを使いやすくするために、ECMAScript6の多くの値にはデフォルトイテレータがあります。すべてのコレクション型、つまり配列、マップ、およびセットには、内容に簡単にアクセスできるように設計されたイテレータがあります。文字列にはデフォルトのイテレータもあり、コード単位ではなく文字列の文字を簡単に繰り返します。
 
-The spread operator works with any iterable and makes converting iterables into arrays easy, too. The conversion works by reading values from an iterator and inserting them individually into an array.
+スプレッド演算子は任意の反復可能変数で動作し、反復可能配列を容易に配列に変換します。変換は、イテレータから値を読み取り、それらを配列に個別に挿入することによって機能します。
 
-A generator is a special function that automatically creates an iterator when called. Generator definitions are indicated by a star (`*`) character and use of the `yield` keyword to indicate which value to return for each successive call to the `next()` method.
+ジェネレータは、呼び出されると自動的にイテレータを作成する特殊な関数です。ジェネレータの定義は、スター(`*`)文字と、`next()`メソッドへの連続した呼び出しのたびに返される値を示す`yield`キーワードの使用によって示されます。
 
-Generator delegation encourages good encapsulation of iterator behavior by letting you reuse existing generators in new generators. You can use an existing generator inside another generator by calling `yield *` instead of `yield`. This process allows you to create an iterator that returns values from multiple iterators.
+ジェネレータの委任では、既存のジェネレータを新しいジェネレータで再利用できるようにすることで、イテレータの動作を適切にカプセル化することを推奨します。既存のジェネレータを別のジェネレータで使用するには、`yield`ではなく`yield *`を呼び出します。このプロセスでは、複数のイテレータから値を返すイテレータを作成できます。
 
-Perhaps the most interesting and exciting aspect of generators and iterators is the possibility of creating cleaner-looking asynchronous code. Instead of needing to use callbacks everywhere, you can set up code that looks synchronous but in fact uses `yield` to wait for asynchronous operations to complete.
+おそらく、ジェネレータとイテレータの最も興味深い面白い側面は、より洗練された非同期コードを作成する可能性です。どこでもコールバックを使用する必要はなく、同期的に見えるコードを設定できますが、実際には`yield`を使用して非同期操作が完了するまで待機します。
